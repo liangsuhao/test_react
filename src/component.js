@@ -34,7 +34,7 @@ class Update{
 
   updateComponent() {
     if(this.stateQueue.length > 0) {
-      shouldUpdate(this.classInstance, this.getNowState());
+      shouldUpdate(this.classInstance, this.getNowState(), this.classInstance.props);
     }
   }
 
@@ -52,10 +52,22 @@ class Update{
   }  
 }
 
-function shouldUpdate(classInstance, newState) {
+function shouldUpdate(classInstance, newState, nextProps) {
+  let willUpdate = true;
   classInstance.state = newState;
+  if(willUpdate && classInstance.shouldComponentUpdate) {
+    willUpdate = classInstance.shouldComponentUpdate(nextProps,newState)===true ? true : false;
+  }
 
-  classInstance.forceUpdate();
+  if(willUpdate) {
+    if(classInstance.componentWillUpdate) {
+      classInstance.componentWillUpdate();
+    }
+    classInstance.forceUpdate();
+    if(classInstance.componentDidUpdate) {
+      classInstance.componentDidUpdatet();
+    }
+  }
 }
 
 class Component {
