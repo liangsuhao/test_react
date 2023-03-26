@@ -59,6 +59,11 @@ function createClassElement(vdom) {
     classInstance.componentWillMount();
   }
 
+  if(classInstance.constructor.getDerivedStateFromProps) {
+    let newState = classInstance.constructor.getDerivedStateFromProps(props, classInstance.state);
+    classInstance.state = {...classInstance.state, ...newState};
+  }
+
   let virtualDom = classInstance.render();
   classInstance.oldRenderVnode = virtualDom;
   vdom.oldRenderVnode = virtualDom;
@@ -119,7 +124,8 @@ export function updateProps(realDom, oldProps, newProps) {
   if(oldProps) {
     for(let key in oldProps) {
       if(!newProps[key]) {
-        realDom[key] = null;
+        // realDom[key] = null;
+        realDom.removeAttribute(key);
       }
     }
   }
@@ -155,11 +161,25 @@ export function twoVnode(parent,newVdom,oldVdom,position) {
       let textDom = oldVdom.dom;
       textDom.textContent = newVdom.content;
       newVdom.dom = textDom;
-    } else {
+    } else if(typeof newVdom.type === 'string') { //当是原始组件的时候
       let newDom = findRealDom(oldVdom); //直接复用原来的真实dom，并处新vdom的属性
       updateProps(newDom, oldVdom.props, newVdom.props);
       // updateChildren(newVdom, oldVdom, newDom);
       newVdom.dom = newDom;
+    } else if(typeof newVdom.type === 'function' && newVdom.type.isClassComponent) {//当是类组件的时候
+      let classInstance = oldVdom.classInstance;
+      if(classInstance.componentWillReceiveProps) {
+        classInstance.componentWillReceiveProps(newVdom.props, classInstance.state);
+      }
+      classInstance.update.emitUpdate(newVdom.props);
+
+      oldVdom.classInstance = classInstance;
+    } else if(typeof newVdom.type === 'function') {
+      let parentNode = findRealDom(oldVdom).parentNode;
+      let {type, props} = newVdom;
+      let newRenderVdom = type(props);
+      twoVnode(parentNode, oldVdom.oldRenderVnode, newRenderVdom);
+      oldVdom.oldRenderVnode = newRenderVdom;
     }
   }
 }

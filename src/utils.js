@@ -7,3 +7,7 @@ export function getNewVnode(item) {
     return item;
   }
 }
+
+export function isExit(item) {
+  return item || item === 0;
+}

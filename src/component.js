@@ -24,7 +24,8 @@ class Update{
     this.emitUpdate();
   }
 
-  emitUpdate() {
+  emitUpdate(newProps) {
+    this.nextProps = newProps;
     if(syncUpdate.isSyncBatch) {
       syncUpdate.updateQueue.push(this);
     } else {
@@ -33,7 +34,7 @@ class Update{
   }
 
   updateComponent() {
-    if(this.stateQueue.length > 0) {
+    if(this.nextProps || this.stateQueue.length > 0) {
       shouldUpdate(this.classInstance, this.getNowState(), this.classInstance.props);
     }
   }
@@ -55,6 +56,11 @@ class Update{
 function shouldUpdate(classInstance, newState, nextProps) {
   let willUpdate = true;
   classInstance.state = newState;
+
+  if(nextProps) {
+    classInstance.props = nextProps;
+  }
+
   if(willUpdate && classInstance.shouldComponentUpdate) {
     willUpdate = classInstance.shouldComponentUpdate(nextProps,newState)===true ? true : false;
   }
@@ -65,7 +71,7 @@ function shouldUpdate(classInstance, newState, nextProps) {
     }
     classInstance.forceUpdate();
     if(classInstance.componentDidUpdate) {
-      classInstance.componentDidUpdatet();
+      classInstance.componentDidUpdate();
     }
   }
 }
@@ -83,6 +89,10 @@ class Component {
   }
 
   forceUpdate() {
+    if(this.constructor.getDerivedStateFromProps) {
+      let newState = this.constructor.getDerivedStateFromProps(this.props, this.state);
+      this.state = {...this.state, ...newState};
+    }
     let newVnode = this.render();
     let oldVnode = this.oldRenderVnode;
 

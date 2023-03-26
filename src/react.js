@@ -1,6 +1,6 @@
 import { REACT_ELEMENT, REACT_FORWARD_REF } from './common.js';
 import Component from './component.js';
-import { getNewVnode } from './utils.js';
+import { getNewVnode, isExit } from './utils.js';
 
 function createElement(tag, props, ...children) {
   const result = {};
@@ -25,7 +25,9 @@ function createElement(tag, props, ...children) {
     if(children && children.length > 1) {
       newChildren = [];
       children.forEach((item) => {
-        newChildren.push(getNewVnode(item));
+        if(isExit(item)) {
+          newChildren.push(getNewVnode(item));
+        }
       })
     } else {
       newChildren = children ? getNewVnode(children[0]) : null;

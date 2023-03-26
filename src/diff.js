@@ -1,4 +1,4 @@
-import { REACT_INSERT, REACT_MOVE } from './common';
+import { REACT_INSERT, REACT_MOVE, REACT_TEXT } from './common';
 import { findRealDom, getRealDom, updateProps } from './react-dom';
 /**
  * 
@@ -28,32 +28,38 @@ export function domDiff(newVdom, oldVdom, parent) {
   })
 
   newVdom.forEach((item,index) => {
-    let key = (item.key || item.key===0) ? item.key : index;
-    item.arrIndex = index;
-    let oldItem = oldVdomMap.get(key);
-    
-    
-    if(oldItem) { 
-      updateProps(findRealDom(oldItem), oldItem.props, item.props);
-      if(oldItem.arrIndex < lastPlaceIndex) { //说明要移动
+    if(item) {
+      let key = (item?.key || item?.key===0) ? item?.key : index;
+      item.arrIndex = index;
+      let oldItem = oldVdomMap.get(key);
+      
+      
+      if(oldItem) {
+        if(item.type === REACT_TEXT) {
+          findRealDom(oldItem).textContent = item.content;
+        } else {
+          updateProps(findRealDom(oldItem), oldItem.props, item.props);
+        }
+        if(oldItem.arrIndex < lastPlaceIndex) { //说明要移动
+          patch.push({
+            oldVdom: oldItem,
+            newVdom: item,
+            position: index,
+            type: REACT_MOVE,
+          })
+        } else { //这些直接呆在原地的dom需要重新赋值
+          item.dom = oldItem.dom;
+        }
+        lastPlaceIndex = Math.max(index, oldItem.arrIndex, lastPlaceIndex);
+
+        oldVdomMap.delete(key);
+      } else { //说明要添加
         patch.push({
-          oldVdom: oldItem,
           newVdom: item,
           position: index,
-          type: REACT_MOVE,
+          type: REACT_INSERT,
         })
-      } else { //这些直接呆在原地的dom需要重新赋值
-        item.dom = oldItem.dom;
       }
-      lastPlaceIndex = Math.max(index, oldItem.arrIndex, lastPlaceIndex);
-
-      oldVdomMap.delete(key);
-    } else { //说明要添加
-      patch.push({
-        newVdom: item,
-        position: index,
-        type: REACT_INSERT,
-      })
     }
   })
 
