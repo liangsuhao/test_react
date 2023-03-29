@@ -1,4 +1,4 @@
-import { REACT_ELEMENT, REACT_FORWARD_REF } from './common.js';
+import { REACT_ELEMENT, REACT_FORWARD_REF, REACT_PROVIDER, REACT_CONTEXT } from './common.js';
 import Component from './component.js';
 import { getNewVnode, isExit } from './utils.js';
 
@@ -49,11 +49,51 @@ function forwardRef(render) {
   }
 }
 
+function createContext() {
+  let context = {
+    $$typeof: REACT_CONTEXT,
+  };
+  let consumer = {
+    $$typeof: REACT_CONTEXT,
+    _context: context
+  };
+  let provider = {
+    $$typeof: REACT_PROVIDER,
+    _context: context
+  }
+  context.Consumer = consumer;
+  context.Provider = provider;
+  context._currentValue = undefined;
+  return context;
+}
+
+function cloneElement(oldElement, newProps, ...children) {
+  let newChildren;
+  if(children && children.length > 1) {
+    newChildren = [];
+    children.forEach((item) => {
+      if(isExit(item)) {
+        newChildren.push(getNewVnode(item));
+      }
+    })
+  } else {
+    newChildren = children ? getNewVnode(children[0]) : null;
+  }
+  newProps['children'] = newChildren;
+
+  return {
+    ...oldElement,
+    props: newProps
+  }
+}
+
 const React = {
   createElement,
   Component,
   createRef,
-  forwardRef
+  forwardRef,
+  createContext,
+  cloneElement
 }
 
 export default React;

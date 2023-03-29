@@ -4,11 +4,11 @@ export const syncUpdate = {
   isSyncBatch: false,
   updateQueue: [],
   batchUpdate: () => {
+    syncUpdate.isSyncBatch = false;
     syncUpdate.updateQueue.forEach((update)=>{
       update.updateComponent()
     })
     syncUpdate.updateQueue.length = 0;
-    syncUpdate.isSyncBatch = false;
   }
 }
 
@@ -93,13 +93,16 @@ class Component {
       let newState = this.constructor.getDerivedStateFromProps(this.props, this.state);
       this.state = {...this.state, ...newState};
     }
+    if(this.constructor.contextType) {
+      this.context = this.constructor.contextType._currentValue;
+    }
     let newVnode = this.render();
     let oldVnode = this.oldRenderVnode;
 
     let realDom = findRealDom(oldVnode);
 
     twoVnode(realDom.parentNode,newVnode,oldVnode);
-    this.oldRenderVnode = newVnode;
+    // this.oldRenderVnode = newVnode;
   }
 }
 

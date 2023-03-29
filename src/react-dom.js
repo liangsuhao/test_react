@@ -1,4 +1,4 @@
-import { REACT_FORWARD_REF, REACT_TEXT } from './common';
+import { REACT_CONTEXT, REACT_FORWARD_REF, REACT_PROVIDER, REACT_TEXT } from './common';
 import { domDiff } from './diff';
 import newAddEvent from './event';
 
@@ -28,6 +28,10 @@ export function getRealDom(vdom) {
     }
   } else if(type && type.$$typeof === REACT_FORWARD_REF)  {
     return createForwardElement(vdom)
+  } else if(type && type.$$typeof === REACT_PROVIDER) {
+    return createProviderElement(vdom);
+  } else if(type && type.$$typeof === REACT_CONTEXT) {
+    return createContextElement(vdom);
   } else {
     realDom = document.createElement(type);
   }
@@ -41,6 +45,25 @@ export function getRealDom(vdom) {
     ref.current = realDom;
   }
   return realDom;
+}
+
+function createProviderElement(vdom) {
+  let {type, props} = vdom;
+  let context = type._context;
+  context._currentValue = props.value;
+
+  let oldRenderVnode = props.children;
+  vdom.oldRenderVnode = oldRenderVnode;
+  return getRealDom(oldRenderVnode);
+}
+
+function createContextElement(vdom) {
+  let {type, props} = vdom;
+  let context = type._context;
+
+  let oldRenderVnode = props.children(context._currentValue);
+  vdom.oldRenderVnode = oldRenderVnode;
+  return getRealDom(oldRenderVnode);
 }
 
 function createFuncElement(vdom) {
@@ -64,9 +87,14 @@ function createClassElement(vdom) {
     classInstance.state = {...classInstance.state, ...newState};
   }
 
+  if(type.contextType) {
+    classInstance.context = type.contextType._currentValue;
+  }
+
   let virtualDom = classInstance.render();
   classInstance.oldRenderVnode = virtualDom;
   vdom.oldRenderVnode = virtualDom;
+  vdom.classInstance = classInstance;
   if(ref) {
     ref.current = classInstance;
   }
@@ -166,6 +194,10 @@ export function twoVnode(parent,newVdom,oldVdom,position) {
       updateProps(newDom, oldVdom.props, newVdom.props);
       // updateChildren(newVdom, oldVdom, newDom);
       newVdom.dom = newDom;
+    } else if(oldVdom.type.$$typeof === REACT_PROVIDER) {
+      updateProviderComponent(parent, oldVdom, newVdom);
+    } else if(oldVdom.type.$$typeof === REACT_CONTEXT) {
+      updateContextComponent(parent, oldVdom, newVdom);
     } else if(typeof newVdom.type === 'function' && newVdom.type.isClassComponent) {//当是类组件的时候
       let classInstance = oldVdom.classInstance;
       if(classInstance.componentWillReceiveProps) {
@@ -182,6 +214,25 @@ export function twoVnode(parent,newVdom,oldVdom,position) {
       oldVdom.oldRenderVnode = newRenderVdom;
     }
   }
+}
+
+function updateProviderComponent(parent, oldVdom, newVdom) {
+  let {type, props} = newVdom;
+  let context = type._context;
+  context._currentValue = props.value;
+  let renderDom = props.children;
+
+  twoVnode(parent, renderDom, oldVdom.oldRenderVnode);
+  // oldVdom.oldRenderVnode = renderDom;
+}
+
+function updateContextComponent(parent, oldVdom, newVdom) {
+  let {type, props} = newVdom;
+  let context = type._context;
+  let renderDom = props.children(context._currentValue);
+
+  twoVnode(parent, renderDom, oldVdom.oldRenderVnode);
+  // oldVdom.oldRenderVnode = renderDom;
 }
 
 function updateChildren(newVdom, oldVdom, parent) {

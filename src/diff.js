@@ -1,5 +1,5 @@
 import { REACT_INSERT, REACT_MOVE, REACT_TEXT } from './common';
-import { findRealDom, getRealDom, updateProps } from './react-dom';
+import { findRealDom, getRealDom, updateProps, twoVnode } from './react-dom';
 /**
  * 
  * @param {Array} newVdom 新的虚拟dom
@@ -38,7 +38,8 @@ export function domDiff(newVdom, oldVdom, parent) {
         if(item.type === REACT_TEXT) {
           findRealDom(oldItem).textContent = item.content;
         } else {
-          updateProps(findRealDom(oldItem), oldItem.props, item.props);
+          // updateProps(findRealDom(oldItem), oldItem.props, item.props);
+          twoVnode(findRealDom(oldItem).parentNode, item, oldItem)
         }
         if(oldItem.arrIndex < lastPlaceIndex) { //说明要移动
           patch.push({
