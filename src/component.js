@@ -1,4 +1,5 @@
 import { findRealDom, twoVnode } from './react-dom'
+import { judgeTwoObj } from './utils'
 
 export const syncUpdate = {
   isSyncBatch: false,
@@ -35,7 +36,7 @@ class Update{
 
   updateComponent() {
     if(this.nextProps || this.stateQueue.length > 0) {
-      shouldUpdate(this.classInstance, this.getNowState(), this.classInstance.props);
+      shouldUpdate(this.classInstance, this.getNowState(), this.nextProps);
     }
   }
 
@@ -57,12 +58,12 @@ function shouldUpdate(classInstance, newState, nextProps) {
   let willUpdate = true;
   classInstance.state = newState;
 
-  if(nextProps) {
-    classInstance.props = nextProps;
-  }
-
   if(willUpdate && classInstance.shouldComponentUpdate) {
     willUpdate = classInstance.shouldComponentUpdate(nextProps,newState)===true ? true : false;
+  }
+
+  if(nextProps) {
+    classInstance.props = nextProps;
   }
 
   if(willUpdate) {
@@ -106,4 +107,17 @@ class Component {
   }
 }
 
-export default Component;
+class PureComponent extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return judgeTwoObj(this.props, nextProps) || judgeTwoObj(this.state, nextState);
+  }
+}
+
+export  {
+  Component,
+  PureComponent
+}

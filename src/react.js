@@ -1,6 +1,7 @@
 import { REACT_ELEMENT, REACT_FORWARD_REF, REACT_PROVIDER, REACT_CONTEXT } from './common.js';
-import Component from './component.js';
+import {Component, PureComponent} from './component.js';
 import { getNewVnode, isExit } from './utils.js';
+import { useState } from './react-dom'
 
 function createElement(tag, props, ...children) {
   const result = {};
@@ -8,10 +9,10 @@ function createElement(tag, props, ...children) {
     result.key = null;
     result.ref = null;
     result.type = tag;
-    result._owner = null;
+    // result._owner = null;
     result._store = {validated: false}
-    result._self = null; 
-    result._source = null;
+    // result._self = null; 
+    // result._source = null;
     if(props && props.ref) {
       result.ref = props.ref;
       delete props['ref'];
@@ -93,7 +94,9 @@ const React = {
   createRef,
   forwardRef,
   createContext,
-  cloneElement
+  cloneElement,
+  PureComponent,
+  useState
 }
 
 export default React;

@@ -2,8 +2,11 @@ import { REACT_CONTEXT, REACT_FORWARD_REF, REACT_PROVIDER, REACT_TEXT } from './
 import { domDiff } from './diff';
 import newAddEvent from './event';
 
+let stateArr = [];
+let stateIndex = 0;
+let stateUpdate;
+
 const render = (vdom, container) => {
-  console.log(vdom, container)
   if(!vdom) {
     return
   }
@@ -13,6 +16,11 @@ const render = (vdom, container) => {
     if(dom.componentDidMount) {
       dom.componentDidMount();
     }
+  }
+  stateUpdate = () => {
+    stateIndex = 0;
+    console.log(vdom, vdom)
+    twoVnode(container, vdom, vdom)
   }
 }
 
@@ -217,7 +225,7 @@ export function twoVnode(parent,newVdom,oldVdom,position) {
       let parentNode = findRealDom(oldVdom).parentNode;
       let {type, props} = newVdom;
       let newRenderVdom = type(props);
-      twoVnode(parentNode, oldVdom.oldRenderVnode, newRenderVdom);
+      twoVnode(parentNode, newRenderVdom, oldVdom.oldRenderVnode);
       oldVdom.oldRenderVnode = newRenderVdom;
     }
   }
@@ -297,6 +305,16 @@ export function findRealDom(vdom) {
   } else {
     return findRealDom(vdom.oldRenderVnode);
   }
+}
+
+export function useState(initValue) {
+  let currentIndex = stateIndex;
+  stateArr[currentIndex] = stateArr[currentIndex] || initValue;
+  function setUpdate(newValue) {
+    stateArr[currentIndex] = newValue;
+    stateUpdate();
+  }
+  return [stateArr[stateIndex++], setUpdate];
 }
 
 const ReactDom = {
