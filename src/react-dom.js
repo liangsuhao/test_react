@@ -3,14 +3,16 @@ import { domDiff } from './diff';
 import newAddEvent from './event';
 
 const render = (vdom, container) => {
+  console.log(vdom, container)
   if(!vdom) {
     return
   }
   let dom = getRealDom(vdom);
-
-  container.appendChild(dom);
-  if(dom.componentDidMount) {
-    dom.componentDidMount();
+  if(dom) {
+    container.appendChild(dom);
+    if(dom.componentDidMount) {
+      dom.componentDidMount();
+    }
   }
 }
 
@@ -92,6 +94,9 @@ function createClassElement(vdom) {
   }
 
   let virtualDom = classInstance.render();
+  if(!virtualDom) {
+    return null;
+  }
   classInstance.oldRenderVnode = virtualDom;
   vdom.oldRenderVnode = virtualDom;
   vdom.classInstance = classInstance;
@@ -200,12 +205,14 @@ export function twoVnode(parent,newVdom,oldVdom,position) {
       updateContextComponent(parent, oldVdom, newVdom);
     } else if(typeof newVdom.type === 'function' && newVdom.type.isClassComponent) {//当是类组件的时候
       let classInstance = oldVdom.classInstance;
-      if(classInstance.componentWillReceiveProps) {
-        classInstance.componentWillReceiveProps(newVdom.props, classInstance.state);
+      if(classInstance) {
+        if(classInstance.componentWillReceiveProps) {
+          classInstance.componentWillReceiveProps(newVdom.props, classInstance.state);
+        }
+        classInstance.update.emitUpdate(newVdom.props);
+  
+        oldVdom.classInstance = classInstance;
       }
-      classInstance.update.emitUpdate(newVdom.props);
-
-      oldVdom.classInstance = classInstance;
     } else if(typeof newVdom.type === 'function') {
       let parentNode = findRealDom(oldVdom).parentNode;
       let {type, props} = newVdom;
@@ -293,7 +300,8 @@ export function findRealDom(vdom) {
 }
 
 const ReactDom = {
-  render
+  render,
+  createPortal: render
 }
 
 export default ReactDom;

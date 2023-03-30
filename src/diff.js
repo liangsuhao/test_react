@@ -39,7 +39,7 @@ export function domDiff(newVdom, oldVdom, parent) {
           findRealDom(oldItem).textContent = item.content;
         } else {
           // updateProps(findRealDom(oldItem), oldItem.props, item.props);
-          twoVnode(findRealDom(oldItem).parentNode, item, oldItem)
+          twoVnode(findRealDom(oldItem)?.parentNode, item, oldItem)
         }
         if(oldItem.arrIndex < lastPlaceIndex) { //说明要移动
           patch.push({
@@ -84,15 +84,17 @@ export function domDiff(newVdom, oldVdom, parent) {
       item.newVdom.dom = realDom;
     } else if(item.type === REACT_INSERT) {
       let realDom = getRealDom(item.newVdom);
-      let children = parent.childNodes;
-      // let position = children.find((item,index)=>index>item.position);
-      let position = children[item.position];
-      if(position) {
-        parent.insertBefore(realDom, position);
-      } else {
-        parent.appendChild(realDom);
+      if(realDom) {
+        let children = parent.childNodes;
+        // let position = children.find((item,index)=>index>item.position);
+        let position = children[item.position];
+        if(position) {
+          parent.insertBefore(realDom, position);
+        } else {
+          parent.appendChild(realDom);
+        }
+        item.newVdom.dom = realDom;
       }
-      item.newVdom.dom = realDom;
     }
   })
 }
