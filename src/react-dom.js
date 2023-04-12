@@ -317,7 +317,7 @@ export function useState(initValue) {
   return [stateArr[stateIndex++], setUpdate];
 }
 
-export function useEffect(reducer, initValue) {
+export function useReducer(reducer, initValue) {
   let currentIndex = stateIndex;
   stateArr[currentIndex] = stateArr[currentIndex] || initValue;
   function dispatch(action) {
@@ -330,7 +330,26 @@ export function useEffect(reducer, initValue) {
 }
 
 export function useEffect(callback, deps) {
-  
+  let currentIndex = stateIndex;
+  if(stateArr[currentIndex]) {
+    let [destory, oldDeps] = stateArr[currentIndex];
+    let same = deps.every((item,index) => item === oldDeps[index]);
+    if(same) {
+      currentIndex++;
+    } else {
+      destory && destory();
+
+      setTimeout(() => {
+        stateArr[currentIndex] = [callback(), deps];
+        currentIndex++;
+      });
+    }
+  } else {
+    setTimeout(() => {
+      stateArr[currentIndex] = [callback(), deps];
+      currentIndex++;
+    });
+  }
 }
 
 const ReactDom = {
