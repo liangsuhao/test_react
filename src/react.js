@@ -1,7 +1,7 @@
 import { REACT_ELEMENT, REACT_FORWARD_REF, REACT_PROVIDER, REACT_CONTEXT } from './common.js';
 import {Component, PureComponent} from './component.js';
 import { getNewVnode, isExit } from './utils.js';
-import { useState } from './react-dom'
+import { useState, useReducer, useEffect } from './react-dom'
 
 function createElement(tag, props, ...children) {
   const result = {};
@@ -96,7 +96,9 @@ const React = {
   createContext,
   cloneElement,
   PureComponent,
-  useState
+  useState,
+  useReducer,
+  useEffect
 }
 
 export default React;

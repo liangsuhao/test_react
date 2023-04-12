@@ -317,6 +317,22 @@ export function useState(initValue) {
   return [stateArr[stateIndex++], setUpdate];
 }
 
+export function useEffect(reducer, initValue) {
+  let currentIndex = stateIndex;
+  stateArr[currentIndex] = stateArr[currentIndex] || initValue;
+  function dispatch(action) {
+    let newState = reducer(stateArr[currentIndex], action);
+    stateArr[currentIndex] = newState;
+    stateUpdate();
+  }
+
+  return [stateArr[stateIndex++], dispatch];
+}
+
+export function useEffect(callback, deps) {
+  
+}
+
 const ReactDom = {
   render,
   createPortal: render
